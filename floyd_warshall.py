@@ -50,7 +50,7 @@ def floyd_warshall_sequential(dis, n):
 def floyd_warshall_parallel(dis, n):
     dis_gpu = gpuarray.to_gpu(dis)
     for k in range(n):
-        calculate_kernel(dis_gpu, np.int32(n), np.int32(k), block = (n, 1, 1), grid = (1, 1, 1))
+        calculate_kernel(dis_gpu, np.int32(n), np.int32(k), block = (n, 1, 1), grid = (1, 1))
     dis = np.array(dis_gpu.get())
     
 
