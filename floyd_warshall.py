@@ -57,7 +57,7 @@ def multiple_examples_running_time():
     N = 500
     for n in range(50, N + 1, 50):
         sum_time = 0
-        num_iter = 1
+        num_iter = 5
         dis = generate_randon_graph(n)
         running_times = list()
         for _ in range(num_iter):
