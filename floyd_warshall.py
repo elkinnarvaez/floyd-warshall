@@ -54,7 +54,7 @@ def generate_randon_graph(n):
     return dis
 
 def multiple_examples_running_time():
-    N = 500
+    N = 1024
     for n in range(50, N + 1, 50):
         sum_time = 0
         num_iter = 5
@@ -72,7 +72,7 @@ def multiple_examples_running_time():
 def individual_example_running_time():
     n = 500
     sum_time = 0
-    num_iter = 5
+    num_iter = 1
     dis = generate_randon_graph(n)
     running_times = list()
     for _ in range(num_iter):
@@ -98,7 +98,7 @@ def correctness_test():
     print_matrix(dis, n)
             
 def main():
-    multiple_examples_running_time()
+    individual_example_running_time()
     return 0
 
 if __name__ == '__main__':
