@@ -10,6 +10,7 @@ from pycuda.compiler import SourceModule
 import pycuda.driver as drv
 from pycuda import gpuarray
 
+n = None
 
 def print_matrix(dis, n):
     for i in range(n):
@@ -21,11 +22,8 @@ def print_matrix(dis, n):
 ker = SourceModule("""
     #include <stdio.h>
     #define MIN(x, y) (((x) < (y)) ? (x) : (y))
-    __global__ void calculate_kernel(int *dis_gpu, int *params){
-        int k = params[0];
-        int n = params[1];
+    __global__ void calculate_kernel(int *dis_gpu, int n, int k){
         int i = threadIdx.x, j;
-        printf("%d %d\\n", k, n);
         for(j = 0; j < n; j++){
             dis_gpu[i * n + j] = MIN(dis_gpu[i * n + j], dis_gpu[i * n + k] + dis_gpu[i * n + j]);
         }
@@ -52,8 +50,7 @@ def floyd_warshall_sequential(dis, n):
 def floyd_warshall_parallel(dis, n):
     dis_gpu = gpuarray.to_gpu(dis)
     for k in range(n):
-        params_gpu = gpuarray.to_gpu(np.array([np.int64(k), np.int64(n)]))
-        calculate_kernel(dis_gpu, params_gpu, block = (n, 1, 1), grid = (1, 1, 1))
+        calculate_kernel(dis_gpu, np.int32(n), np.int32(k), block = (n, 1, 1), grid = (1, 1, 1))
     dis = np.array(dis_gpu.get())
     
 
