@@ -67,10 +67,7 @@ def multiple_examples_running_time():
             elapsed = float(end - start)
             running_times.append(elapsed)
             sum_time += elapsed
-        print(f'{n} {sum_time/num_iter} {num_iter}', end="")
-        for t in running_times:
-            print(f" {t}", end = "")
-        print()
+        print(f'{n} {sum_time/num_iter} {np.std(running_times)}')
 
 def individual_example_running_time():
     n = 500
@@ -85,10 +82,7 @@ def individual_example_running_time():
         elapsed = end - start
         running_times.append(elapsed)
         sum_time += elapsed
-    print(f'{n} {sum_time/num_iter} {num_iter}', end="")
-    for t in running_times:
-        print(f" {t}", end = "")
-    print()
+    print(f'{n} {sum_time/num_iter} {np.std(running_times)}')
 
 def correctness_test():
     n = 4
