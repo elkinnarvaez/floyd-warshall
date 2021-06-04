@@ -8,22 +8,32 @@ import pycuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
 import pycuda.driver as drv
+from pycuda import gpuarray
 
-MAX_N = 1000
-dis = np.array([[0 for _ in range(MAX_N)] for _ in range(MAX_N)], dtype='int')
+
+def print_matrix(dis, n):
+    for i in range(n):
+        for j in range(n):
+            print(dis[i][j], end = " ")
+        print()
+    print()
 
 ker = SourceModule("""
+    #include <stdio.h>
     #define MIN(x, y) (((x) < (y)) ? (x) : (y))
-    __global__ void calculate_kernel(int *dis, int n, int k){
+    __global__ void calculate_kernel(int *dis_gpu, int *params){
+        int k = params[0];
+        int n = params[1];
         int i = threadIdx.x, j;
+        printf("%d %d\\n", k, n);
         for(j = 0; j < n; j++){
-            dis[i * n + j] = MIN(dis[i * n + j], dis[i * n + k] + dis[i * n + j]);
+            dis_gpu[i * n + j] = MIN(dis_gpu[i * n + j], dis_gpu[i * n + k] + dis_gpu[i * n + j]);
         }
     }
     """)
 
 # ker = SourceModule("""
-#     __global__ void calculate_kernel(int *dis, int n, int k){
+#     __global__ void calculate_kernel(int *dis, int k, int n){
 #         int i = threadIdx.x, j;
 #         for(j = 0; j < n; j++){
 #             dis[i] = %(MAX_N)i;
@@ -33,18 +43,22 @@ ker = SourceModule("""
 
 calculate_kernel = ker.get_function("calculate_kernel")
 
-def floyd_warshall_sequential(n):
+def floyd_warshall_sequential(dis, n):
     for k in range(n):
         for i in range(n):
             for j in range(n):
                 dis[i][j] = min(dis[i][j], dis[i][k] + dis[k][j])
 
-def floyd_warshall_parallel(n):
-    dis_gpu = pycuda.gpuarray.to_gpu(dis)
+def floyd_warshall_parallel(dis, n):
+    dis_gpu = gpuarray.to_gpu(dis)
     for k in range(n):
-        calculate_kernel(dis, n, k, block = (n, 1, 1), grid = (1, 1, 1))
+        params_gpu = gpuarray.to_gpu(np.array([np.int64(k), np.int64(n)]))
+        calculate_kernel(dis_gpu, params_gpu, block = (n, 1, 1), grid = (1, 1, 1))
+    dis = np.array(dis_gpu.get())
+    
 
 def generate_randon_graph(n):
+    dis = np.array([[0 for _ in range(n)] for _ in range(n)], dtype='int')
     for i in range(n):
         for j in range(n):
             if(i == j):
@@ -58,11 +72,11 @@ def multiple_examples_running_time():
     for n in range(50, N + 1, 50):
         sum_time = 0
         num_iter = 5
-        generate_randon_graph(n)
+        dis = generate_randon_graph(n)
         running_times = list()
         for _ in range(num_iter):
             start = default_timer()
-            floyd_warshall_sequential(n)
+            floyd_warshall_sequential(dis, n)
             end = default_timer()
             elapsed = float(end - start)
             running_times.append(elapsed)
@@ -76,11 +90,11 @@ def individual_example_running_time():
     n = 500
     sum_time = 0
     num_iter = 5
-    generate_randon_graph(n)
+    dis = generate_randon_graph(n)
     running_times = list()
     for _ in range(num_iter):
         start = time.time()
-        floyd_warshall_sequential(n)
+        floyd_warshall_sequential(dis, n)
         end = time.time()
         elapsed = end - start
         running_times.append(elapsed)
@@ -89,9 +103,22 @@ def individual_example_running_time():
     for t in running_times:
         print(f" {t}", end = "")
     print()
+
+def correctness_test():
+    n = 5
+    dis = generate_randon_graph(n)
+    dis_copy = np.array(dis)
+
+    print_matrix(dis, n)
+    floyd_warshall_sequential(dis, n)
+    print_matrix(dis, n)
+    dis = np.array(dis_copy)
+    print_matrix(dis, n)
+    floyd_warshall_parallel(dis, n)
+    print_matrix(dis, n)
             
 def main():
-    individual_example_running_time()
+    correctness_test()
     return 0
 
 if __name__ == '__main__':
