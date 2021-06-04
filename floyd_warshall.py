@@ -83,19 +83,6 @@ def individual_example_running_time():
         running_times.append(elapsed)
         sum_time += elapsed
     print(f'{n} {sum_time/num_iter} {np.std(running_times)}')
-
-def correctness_test():
-    n = 4
-    dis = generate_randon_graph(n)
-    dis_copy = np.array(dis)
-
-    print_matrix(dis, n)
-    floyd_warshall_sequential(dis, n)
-    print_matrix(dis, n)
-    dis = np.array(dis_copy)
-    print_matrix(dis, n)
-    floyd_warshall_parallel(dis, n)
-    print_matrix(dis, n)
             
 def main():
     individual_example_running_time()
