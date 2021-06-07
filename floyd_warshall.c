@@ -105,15 +105,15 @@ void multiple_examples_running_time(){
 
 void correcteness_test(){
     n = 4;
-    dis[0][0] = 0; dis[0][1] = 5; dis[0][2] = 999; dis[0][3] = 10;
-    dis[1][0] = 999; dis[1][1] = 0; dis[1][2] = 3; dis[1][3] = 999;
-    dis[2][0] = 999; dis[2][1] = 999; dis[2][2] = 0; dis[2][3] = 1;
-    dis[3][0] = 999; dis[3][1] = 999; dis[3][2] = 999; dis[3][3] = 0;
-    floyd_warshall_parallel();
+    dis[0][0] = 0; dis[0][1] = 3; dis[0][2] = 3; dis[0][3] = 2;
+    dis[1][0] = 10; dis[1][1] = 0; dis[1][2] = 3; dis[1][3] = 3;
+    dis[2][0] = 3; dis[2][1] = 4; dis[2][2] = 0; dis[2][3] = 7;
+    dis[3][0] = 7; dis[3][1] = 4; dis[3][2] = 8; dis[3][3] = 0;
+    floyd_warshall_sequential();
     printDis();
 }
 
 int main(){
-    individual_example_running_time();
+    correcteness_test();
     return 0;
 }
