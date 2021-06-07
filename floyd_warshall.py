@@ -11,6 +11,8 @@ import pycuda.driver as drv
 from pycuda import gpuarray
 import math
 
+NUM_CORES = 1024
+
 def print_matrix(dis, n):
     for i in range(n):
         for j in range(n):
@@ -34,7 +36,8 @@ ker = SourceModule("""
     #include <stdio.h>
     #define MIN(x, y) (((x) < (y)) ? (x) : (y))
     __global__ void calculate_kernel(int *dis, int n, int k){
-        int i = threadIdx.x;
+        // int i = threadIdx.x;
+        int i = blockIdx.x*blockDim.x+threadIdx.x;
         for(int j = 0; j < n; j++){
             dis[i * n + j] = MIN(dis[i * n + j], dis[i * n + k] + dis[k * n + j]);
         }
@@ -55,7 +58,7 @@ def floyd_warshall_parallel(dis, n):
         for j in range(n):
             dis_temp[i*n + j] = dis[i][j]
     for k in range(n):
-        calculate_kernel(drv.InOut(dis_temp), np.int32(n), np.int32(k), block = (n if n < 1024 else 1024, 1, 1), grid = (int(math.ceil(n/1024)), 1, 1))
+        calculate_kernel(drv.InOut(dis_temp), np.int32(n), np.int32(k), block = (n if n <= NUM_CORES else NUM_CORES, 1, 1), grid = (int(math.ceil(n/NUM_CORES)), 1, 1))
     k = 0
     for i in range(n):
         for j in range(n):
@@ -92,14 +95,14 @@ def multiple_examples_running_time():
         print(f'{n} {sum_time/num_iter} {np.std(running_times)}')
 
 def individual_example_running_time():
-    n = 2000
+    n = 1200
     sum_time = 0
     num_iter = 1
     dis = generate_random_graph(n)
     running_times = list()
     for _ in range(num_iter):
         start = time.time()
-        floyd_warshall_parallel(dis, n)
+        floyd_warshall_sequential(dis, n)
         end = time.time()
         elapsed = end - start
         running_times.append(elapsed)
@@ -122,7 +125,7 @@ def correctness_test():
     print(cmp_matrix(ans1, ans2, n))
 
 def main():
-    individual_example_running_time()
+    correctness_test()
     return 0
 
 if __name__ == '__main__':
