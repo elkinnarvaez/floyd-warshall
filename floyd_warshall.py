@@ -18,6 +18,18 @@ def print_matrix(dis, n):
         print()
     print()
 
+def cmp_matrix(m1, m2, n):
+    ans = True
+    i = 0
+    while(i < n and ans):
+        j = 0
+        while(j < n and ans):
+            if(m1[i][j] != m2[i][j]):
+                ans = False
+            j += 1
+        i += 1
+    return ans
+
 ker = SourceModule("""
     #include <stdio.h>
     #define MIN(x, y) (((x) < (y)) ? (x) : (y))
@@ -49,8 +61,6 @@ def floyd_warshall_parallel(dis, n):
         for j in range(n):
             dis[i][j] = dis_temp[i*n + j]
     
-    
-
 def generate_random_graph(n):
     dis = np.array([[0 for _ in range(n)] for _ in range(n)], dtype=np.int32)
     for i in range(n):
@@ -69,7 +79,7 @@ def multiple_examples_running_time():
     N = 1024
     for n in range(50, N + 1, 50):
         sum_time = 0
-        num_iter = 5
+        num_iter = 1
         dis = generate_random_graph(n)
         running_times = list()
         for _ in range(num_iter):
@@ -82,14 +92,14 @@ def multiple_examples_running_time():
         print(f'{n} {sum_time/num_iter} {np.std(running_times)}')
 
 def individual_example_running_time():
-    n = 500
+    n = 2000
     sum_time = 0
     num_iter = 1
     dis = generate_random_graph(n)
     running_times = list()
     for _ in range(num_iter):
         start = time.time()
-        floyd_warshall_sequential(dis, n)
+        floyd_warshall_parallel(dis, n)
         end = time.time()
         elapsed = end - start
         running_times.append(elapsed)
@@ -97,19 +107,22 @@ def individual_example_running_time():
     print(f'{n} {sum_time/num_iter} {np.std(running_times)}')
 
 def correctness_test():
-    n = 4
+    n = 200
     dis = generate_random_graph(n)
     dis_copy = np.array(dis)
-    print_matrix(dis, n)
+    # print_matrix(dis, n)
 
     floyd_warshall_sequential(dis, n)
-    print_matrix(dis, n)
+    ans1 = dis.copy()
+    # print_matrix(dis, n)
     dis = np.array(dis_copy)
     floyd_warshall_parallel(dis, n)
-    print_matrix(dis, n)
+    ans2 = dis.copy()
+    # print_matrix(dis, n)
+    print(cmp_matrix(ans1, ans2, n))
 
 def main():
-    correctness_test()
+    individual_example_running_time()
     return 0
 
 if __name__ == '__main__':
